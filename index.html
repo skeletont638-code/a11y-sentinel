@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>a11y-sentinel · the accessibility your agent can't see</title>
+<meta name="description" content="A free, open-source skill for AI coding agents. Loads all 55 WCAG 2.2 AA criteria, the US ADA context, and a real audit procedure into Claude Code, Cursor, Codex, or Gemini, so your agent audits and fixes accessibility instead of guessing." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper: oklch(95.5% 0.011 85);
+  --paper-2: oklch(93% 0.013 85);
+  --ink: oklch(23% 0.012 60);
+  --ink-2: oklch(37% 0.012 60);
+  --muted: oklch(44% 0.012 60);
+  --faint: oklch(46% 0.012 60);
+  --line: oklch(23% 0.012 60 / 0.13);
+  --line-2: oklch(23% 0.012 60 / 0.2);
+  --crimson: oklch(50% 0.2 25);
+  --crit: oklch(47% 0.2 25);
+  --serious: oklch(47% 0.12 60);
+  --moderate: oklch(45% 0.09 222);
+  --ease: cubic-bezier(0.16,1,0.3,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:"Hanken Grotesk",system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.mono{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;letter-spacing:-0.02em}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2.5px solid var(--crimson);outline-offset:3px;border-radius:3px}
+.skip{position:absolute;left:-999px;top:0;background:var(--ink);color:var(--paper);padding:12px 18px;z-index:100;border-radius:0 0 8px 0}
+.skip:focus{left:0}
+.wrap{max-width:1180px;margin:0 auto;padding:0 32px}
+.kick{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:12px}
+.kick::before{content:"";width:30px;height:1px;background:var(--line-2)}
+
+.r{opacity:1;transform:none}
+.js .r{opacity:0;transform:translateY(18px)}
+.js .r.in{opacity:1;transform:none;transition:opacity .7s var(--ease),transform .7s var(--ease)}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.js .r,.js .r.in{opacity:1!important;transform:none!important;transition:none!important}*{animation:none!important}}
+
+header{position:sticky;top:0;z-index:50;background:oklch(95.5% 0.011 85 / 0.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:18px;height:66px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px;letter-spacing:-0.01em}
+.brand svg{width:22px;height:22px}
+nav.main{margin-left:30px;display:flex;gap:26px}
+nav.main a{font-size:14px;color:var(--ink-2)}
+nav.main a:hover{color:var(--ink)}
+.bar .right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.badge{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:0.1em;color:var(--moderate);border:1px solid color-mix(in oklch,var(--moderate) 35%,transparent);padding:5px 11px;border-radius:20px}
+.btn{font:inherit;font-weight:600;font-size:14px;border:none;cursor:pointer;padding:9px 17px;border-radius:7px;display:inline-flex;align-items:center;gap:7px;transition:transform .2s var(--ease),background .2s var(--ease),color .2s var(--ease)}
+.btn:active{transform:scale(.97)}
+.btn-solid{background:var(--ink);color:var(--paper)}
+.btn-solid:hover{background:var(--crimson)}
+.btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line-2)}
+.btn-ghost:hover{background:var(--paper-2)}
+
+.hero{padding:84px 0 70px}
+.hero-grid{display:grid;grid-template-columns:1.05fr 0.95fr;gap:64px;align-items:start}
+h1{font-family:"Instrument Serif",serif;font-weight:400;font-size:clamp(3rem,5.4vw,5rem);line-height:1.0;letter-spacing:-0.01em;margin:28px 0 0}
+h1 em{font-style:italic;color:var(--crimson)}
+.lead{font-size:clamp(1.05rem,1.4vw,1.2rem);color:var(--ink-2);max-width:46ch;margin-top:26px;line-height:1.55}
+.install{margin-top:34px;max-width:430px}
+.install .lbl{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--faint);display:flex;justify-content:space-between;margin-bottom:8px}
+.install .box{display:flex;align-items:center;gap:12px;background:var(--ink);color:var(--paper);padding:13px 14px 13px 18px;border-radius:10px;font-family:"IBM Plex Mono",monospace;font-size:14px}
+.install .box .g{color:var(--serious)}
+.install .copy{margin-left:auto;background:oklch(100% 0 0 / 0.12);color:var(--paper);border:none;cursor:pointer;padding:6px 11px;border-radius:6px;font:inherit;font-size:12px;font-weight:600}
+.install .copy:hover{background:oklch(100% 0 0 / 0.2)}
+
+.card{background:oklch(97% 0.008 85);border:1px solid var(--line-2);border-radius:16px;box-shadow:0 40px 80px -44px oklch(40% 0.03 60 / 0.4),0 2px 6px -3px oklch(30% 0.02 60 / 0.3);overflow:hidden}
+.card-h{display:flex;align-items:center;gap:10px;padding:15px 20px;border-bottom:1px solid var(--line);font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted)}
+.card-h .d{width:8px;height:8px;border-radius:50%;background:var(--moderate)}
+.card-h .f{color:var(--ink-2)}
+.card-h .n{margin-left:auto;font-size:11px;color:var(--crit);background:oklch(47% 0.2 25 / 0.1);padding:3px 9px;border-radius:20px}
+.find{padding:18px 20px;border-bottom:1px solid var(--line)}
+.find .top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.find .ti{font-family:"Instrument Serif",serif;font-size:1.3rem;color:var(--ink)}
+.find .sev{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;font-weight:500}
+.sev.c{color:var(--crit)}.sev.s{color:var(--serious)}.sev.m{color:var(--moderate)}
+.find .code{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink-2);background:var(--paper-2);border:1px solid var(--line);padding:8px 11px;border-radius:7px;margin-top:11px;overflow-x:auto}
+.find .loc{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--faint);margin-top:8px}
+.card-f{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 20px;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted)}
+
+.strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--paper-2)}
+.strip .row{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:30px 0;flex-wrap:wrap}
+.strip span{font-family:"Instrument Serif",serif;font-size:1.45rem;color:var(--ink-2)}
+
+.sec{padding:104px 0}
+.sec h2{font-family:"Instrument Serif",serif;font-weight:400;font-size:clamp(2.1rem,3.6vw,3.2rem);letter-spacing:-0.01em;line-height:1.06;max-width:20ch}
+.sec h2 em{font-style:italic;color:var(--crimson)}
+.sec .sub{font-size:1.05rem;color:var(--ink-2);max-width:50ch;margin-top:20px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start}
+
+.feats{margin-top:30px;display:flex;flex-direction:column;gap:22px}
+.feat{display:grid;grid-template-columns:auto 1fr;gap:14px;max-width:52ch}
+.feat .dot{width:8px;height:8px;border-radius:50%;background:var(--crimson);margin-top:8px}
+.feat b{color:var(--ink);font-weight:600}
+.feat span.t{color:var(--muted)}
+
+.sess{background:oklch(97% 0.008 85);border:1px solid var(--line-2);border-radius:16px;overflow:hidden;box-shadow:0 30px 70px -40px oklch(40% 0.03 60 / 0.35)}
+.sess-h{padding:13px 18px;border-bottom:1px solid var(--line);font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:0.08em;color:var(--faint)}
+.msg{padding:15px 18px;display:grid;grid-template-columns:24px 1fr;gap:12px;border-bottom:1px solid var(--line);font-size:14px}
+.msg .av{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:600}
+.msg.u .av{background:var(--ink);color:var(--paper)}
+.msg.a .av{background:var(--paper-2);color:var(--ink);border:1px solid var(--line-2)}
+.msg .body{color:var(--ink-2)}
+.msg .body code{font-family:"IBM Plex Mono",monospace;font-size:12.5px;background:var(--paper-2);padding:1px 5px;border-radius:4px;color:var(--ink)}
+.diff{font-family:"IBM Plex Mono",monospace;font-size:12px;line-height:1.7;background:var(--paper-2);border:1px solid var(--line);border-radius:8px;padding:11px 13px;margin-top:10px;overflow-x:auto}
+.diff .del{color:var(--crit)}.diff .add{color:oklch(45% 0.12 150)}
+
+.loop{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-top:48px}
+.step{background:var(--paper);padding:32px 28px}
+.step .nh{display:flex;align-items:baseline;justify-content:space-between}
+.step .nn{font-family:"Instrument Serif",serif;font-size:2.6rem;color:oklch(56% 0.02 60);line-height:1}
+.step .tag{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--crimson)}
+.step h3{font-family:"Instrument Serif",serif;font-weight:400;font-size:1.6rem;margin:18px 0 10px}
+.step p{font-size:14px;color:var(--muted);max-width:34ch}
+
+.tbl{width:100%;border-collapse:collapse;margin-top:8px;font-size:15px}
+.tbl th,.tbl td{text-align:left;padding:16px 14px;border-bottom:1px solid var(--line)}
+.tbl thead th{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--faint);font-weight:500}
+.tbl thead th.s{color:var(--crimson)}
+.tbl tbody th{font-weight:600;color:var(--ink)}
+.tbl td{text-align:center;width:130px;color:var(--faint);font-size:13px}
+.tbl td.y{color:var(--crimson);font-size:18px}
+
+.rule{display:grid;grid-template-columns:64px 1fr auto;gap:20px;align-items:center;padding:18px 0;border-bottom:1px solid var(--line)}
+.rule:first-of-type{border-top:1px solid var(--line)}
+.rule .sc{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--crit)}
+.rule .nm{font-family:"Instrument Serif",serif;font-size:1.3rem;color:var(--ink)}
+.rule .de{font-size:13px;color:var(--muted);margin-top:1px}
+.rule .lv{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:0.08em;color:var(--faint)}
+
+.faq{display:flex;flex-direction:column}
+.qa{padding:24px 0;border-bottom:1px solid var(--line)}
+.qa h3{font-family:"Instrument Serif",serif;font-weight:400;font-size:1.4rem;color:var(--ink)}
+.qa p{font-size:14.5px;color:var(--muted);margin-top:9px;max-width:58ch}
+
+.close{background:var(--ink);color:var(--paper);padding:104px 0}
+.close h2{font-family:"Instrument Serif",serif;font-weight:400;font-size:clamp(2.4rem,5vw,4rem);line-height:1.02;letter-spacing:-0.01em;color:oklch(96% 0.01 85);max-width:16ch}
+.close h2 em{font-style:italic;color:oklch(72% 0.14 30)}
+.close p{color:oklch(82% 0.01 85);margin-top:22px;font-size:1.05rem}
+.close .cta{display:flex;gap:14px;flex-wrap:wrap;margin-top:34px}
+.close .btn-solid{background:var(--paper);color:var(--ink)}
+.close .btn-solid:hover{background:oklch(88% 0.02 85)}
+.close .btn-ghost{color:var(--paper);border-color:oklch(100% 0 0 / 0.22)}
+.close .btn-ghost:hover{background:oklch(100% 0 0 / 0.08)}
+
+footer{padding:46px 0}
+.foot{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.foot .b{display:flex;align-items:center;gap:10px}
+.foot .b svg{width:22px;height:22px}
+.foot .b div b{font-weight:600}
+.foot .b div span{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--faint);letter-spacing:0.04em}
+.foot nav{display:flex;gap:22px;font-size:14px;color:var(--muted)}
+.foot nav a:hover{color:var(--ink)}
+.foot .cp{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--faint);letter-spacing:0.02em}
+
+@media(max-width:860px){
+  .hero-grid,.two,.loop{grid-template-columns:1fr;gap:40px}
+  .sec{padding:72px 0}
+  nav.main{display:none}
+  h1{font-size:clamp(2.6rem,11vw,3.4rem)}
+  .tbl td{width:60px}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header>
+  <div class="wrap bar">
+    <span class="brand">
+      <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 3 L27 8 V16 C27 23 22 27 16 29 C10 27 5 23 5 16 V8 Z" fill="oklch(23% 0.012 60)"/><path d="M11 16 l3.5 3.5 L21 12" stroke="oklch(95.5% 0.011 85)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      a11y-sentinel
+    </span>
+    <nav class="main" aria-label="Primary"><a href="#how">How it works</a><a href="#compare">Comparison</a><a href="#ruleset">Ruleset</a><a href="#faq">FAQ</a></nav>
+    <div class="right">
+      <span class="badge">MIT · OPEN SOURCE</span>
+      <a class="btn btn-solid" href="https://github.com/skeletont638-code/a11y-sentinel">Install →</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" aria-labelledby="h1">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="kick">Agentic skill · WCAG 2.2 AA · MIT</p>
+        <h1 id="h1">A sentinel for the accessibility your agent <em>can't see.</em></h1>
+        <p class="lead">A free, open-source skill for AI coding agents. Load it into Claude Code, Cursor, Codex, or Gemini, and your agent checks every screen it builds against all 55 WCAG 2.2 AA criteria, then writes the fix back to source.</p>
+        <div class="install">
+          <span class="lbl">Install via your agent <span>1 line</span></span>
+          <span class="box"><span class="g">$</span><span class="mono">npx skills add a11y-sentinel</span><button class="copy" data-copy="npx skills add https://github.com/skeletont638-code/a11y-sentinel">Copy</button></span>
+        </div>
+      </div>
+
+      <div class="card r" role="img" aria-label="Example audit by an agent using a11y-sentinel on home.tsx: three findings, a critical missing alt text, a serious contrast issue, and a moderate non-descriptive link.">
+        <div class="card-h"><span class="d"></span><span class="f">a11y-sentinel · home.tsx</span><span class="n">3 findings</span></div>
+        <div class="find">
+          <div class="top"><span class="ti">Image missing alt text</span><span class="sev c">Critical · WCAG 1.1.1</span></div>
+          <div class="code">&lt;img src="/hero.jpg" /&gt;</div>
+          <div class="loc">Hero.tsx:42</div>
+        </div>
+        <div class="find">
+          <div class="top"><span class="ti">Insufficient contrast (3.1:1)</span><span class="sev s">Serious · WCAG 1.4.3</span></div>
+          <div class="code">&lt;p class="text-zinc-400 bg-white"&gt;…</div>
+          <div class="loc">Pricing.tsx:118</div>
+        </div>
+        <div class="find">
+          <div class="top"><span class="ti">Link text “click here” isn't descriptive</span><span class="sev m">Moderate · WCAG 2.4.4</span></div>
+          <div class="code">&lt;a href="/docs"&gt;click here&lt;/a&gt;</div>
+          <div class="loc">Footer.tsx:27</div>
+        </div>
+        <div class="card-f"><span>Each finding maps to a one-line fix</span><span>Your agent, using a11y-sentinel</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="strip"><div class="wrap row">
+    <span>Claude Code</span><span>Cursor</span><span>Codex</span><span>Gemini CLI</span><span>any Agent Skills tool</span>
+  </div></div>
+
+  <section class="sec" id="how" aria-labelledby="how-h">
+    <div class="wrap two">
+      <div>
+        
+        <h2 id="how-h" style="margin-top:18px">Your agent already ships UI. Now it ships <em>accessible</em> UI.</h2>
+        <p class="sub">a11y-sentinel rides along in your agent's context. Before it commits a screen, every criterion is already on hand, so accessibility becomes part of the build instead of an afterthought.</p>
+        <div class="feats">
+          <div class="feat"><span class="dot"></span><span class="t"><b>Complete.</b> All 55 WCAG 2.2 A/AA criteria, not the handful a model happens to remember.</span></div>
+          <div class="feat"><span class="dot"></span><span class="t"><b>Judgment-first.</b> It checks what a scanner cannot: whether alt text is meaningful, whether focus order is logical.</span></div>
+          <div class="feat"><span class="dot"></span><span class="t"><b>Patch-shaped.</b> Each finding comes with a concrete fix, scoped to one file.</span></div>
+          <div class="feat"><span class="dot"></span><span class="t"><b>Anywhere.</b> Plain Markdown, so it works in any agent that reads skills.</span></div>
+        </div>
+      </div>
+      <div class="sess r">
+        <div class="sess-h">AGENT · SESSION</div>
+        <div class="msg u"><span class="av">U</span><span class="body">Polish the pricing page and ship it.</span></div>
+        <div class="msg a"><span class="av">A</span><span class="body">Before I commit, I'll audit <code>Pricing.tsx</code> against WCAG 2.2 AA using a11y-sentinel.</span></div>
+        <div class="msg a"><span class="av">A</span><span class="body">Found 2 critical and 1 serious. Applying the fixes:
+          <div class="diff"><span class="del">- &lt;img src="/pro.png" /&gt;</span><br><span class="add">+ &lt;img src="/pro.png" alt="Pro plan, unlimited seats" /&gt;</span><br><span class="del">- &lt;p class="text-zinc-400"&gt;</span><br><span class="add">+ &lt;p class="text-zinc-600"&gt;</span></div>
+        </span></div>
+        <div class="msg a"><span class="av">A</span><span class="body">Re-checked. Contrast and alt text pass. Ready to commit?</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="loop-h" style="padding-top:0">
+    <div class="wrap">
+      
+      <h2 id="loop-h" style="margin-top:18px">From a screen to a patch in your source.</h2>
+      <div class="loop">
+        <div class="step"><div class="nh"><span class="nn">01</span><span class="tag">Audit</span></div><h3>Run both passes</h3><p>The skill walks your agent through the automated pass (axe, pa11y) and the manual one, page by page, against all 55 criteria.</p></div>
+        <div class="step"><div class="nh"><span class="nn">02</span><span class="tag">Judge</span></div><h3>Map each finding</h3><p>Every issue ties to a WCAG criterion and a real fix, explained the way a senior reviewer would. No raw scanner dump in the context window.</p></div>
+        <div class="step"><div class="nh"><span class="nn">03</span><span class="tag">Fix</span></div><h3>Write it back</h3><p>Your agent patches the right file by priority, transaction-blockers first. You review the diff. Nothing changes without your say.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="compare" aria-labelledby="cmp-h" style="padding-top:0">
+    <div class="wrap two" style="align-items:center">
+      <div>
+        
+        <h2 id="cmp-h" style="margin-top:18px">What a linter and a scanner <em>leave out.</em></h2>
+        <p class="sub">axe and eslint catch a real but partial slice. a11y-sentinel hands your agent the whole picture and the fix.</p>
+      </div>
+      <div>
+        <table class="tbl">
+          <thead><tr><th scope="col">Capability</th><th scope="col">eslint-a11y</th><th scope="col">axe-core</th><th scope="col" class="s">a11y-sentinel</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">All 55 WCAG 2.2 criteria</th><td>partial</td><td>partial</td><td class="y">●</td></tr>
+            <tr><th scope="row">Judgment (meaningful alt, focus order)</th><td>no</td><td>no</td><td class="y">●</td></tr>
+            <tr><th scope="row">A fix for each finding</th><td>no</td><td>no</td><td class="y">●</td></tr>
+            <tr><th scope="row">US ADA / legal context</th><td>no</td><td>no</td><td class="y">●</td></tr>
+            <tr><th scope="row">Works inside any agent</th><td>no</td><td>no</td><td class="y">●</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="ruleset" aria-labelledby="rs-h" style="padding-top:0">
+    <div class="wrap two">
+      <div>
+        
+        <h2 id="rs-h" style="margin-top:18px">The rules it <em>actually</em> checks.</h2>
+        <p class="sub">Each finding maps to a specific WCAG 2.2 criterion and the ADA expectation behind it. No vague “improve accessibility” notes. Every flag points to a rule and a fix.</p>
+        
+      </div>
+      <div>
+        <div class="rule"><span class="sc">1.1.1</span><div><div class="nm">Non-text content</div><div class="de">alt text, decorative imagery, SVG titles</div></div><span class="lv">A</span></div>
+        <div class="rule"><span class="sc">1.3.1</span><div><div class="nm">Info &amp; relationships</div><div class="de">landmarks, lists, table headers</div></div><span class="lv">A</span></div>
+        <div class="rule"><span class="sc">1.4.3</span><div><div class="nm">Contrast (minimum)</div><div class="de">text vs. background, focus rings</div></div><span class="lv">AA</span></div>
+        <div class="rule"><span class="sc">2.1.1</span><div><div class="nm">Keyboard</div><div class="de">tab order, escape paths, focus traps</div></div><span class="lv">A</span></div>
+        <div class="rule"><span class="sc">2.4.4</span><div><div class="nm">Link purpose</div><div class="de">ambiguous link text, button-as-link misuse</div></div><span class="lv">A</span></div>
+        <div class="rule"><span class="sc">2.5.8</span><div><div class="nm">Target size</div><div class="de">tap targets at least 24 by 24 CSS px</div></div><span class="lv">AA</span></div>
+        <div class="rule"><span class="sc">3.3.2</span><div><div class="nm">Labels or instructions</div><div class="de">form fields, required, error messages</div></div><span class="lv">A</span></div>
+        <div class="rule"><span class="sc">4.1.2</span><div><div class="nm">Name, role, value</div><div class="de">ARIA misuse, custom widget contracts</div></div><span class="lv">A</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="faq" aria-labelledby="faq-h" style="padding-top:0">
+    <div class="wrap two">
+      <div><h2 id="faq-h" style="margin-top:18px">Frequently <em>asked.</em></h2></div>
+      <div class="faq">
+        <div class="qa"><h3>Does this replace a human accessibility audit?</h3><p>No. Automated checks cover roughly a third of WCAG. The skill pushes your agent through the manual pass too, but cognitive load, screen-reader UX, and real assistive-tech testing still need a person.</p></div>
+        <div class="qa"><h3>What does the skill actually contain?</h3><p>Plain Markdown: all 55 WCAG 2.2 A/AA criteria with what to check and how each fails, the US legal context, and a step-by-step audit procedure that leans on axe and pa11y for detection.</p></div>
+        <div class="qa"><h3>Will my agent change code without asking?</h3><p>That depends on how you run it. The skill tells your agent to fix the source by priority and report honestly. You review the diffs before anything lands.</p></div>
+        <div class="qa"><h3>Is it free?</h3><p>Yes. MIT, open source, no accounts, no tiers, forever.</p></div>
+        <div class="qa"><h3>How is it different from eslint-jsx-a11y or axe?</h3><p>Those detect a subset of issues from source or the DOM. The skill gives your agent the full criteria, the judgment layer those tools can't do, a fix for each finding, and the legal context, then walks it through both passes.</p></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<section class="close" aria-labelledby="close-h">
+  <div class="wrap">
+    
+    <h2 id="close-h" style="margin-top:18px">Ship UI your agent can be <em>proud</em> of.</h2>
+    <p>Free and open source. One line in your agent. No accounts, no tracking.</p>
+    <div class="cta">
+      <a class="btn btn-solid" href="https://github.com/skeletont638-code/a11y-sentinel">Install the skill →</a>
+      <a class="btn btn-ghost" href="https://github.com/skeletont638-code/a11y-sentinel/blob/master/skills/accessibility-audit/SKILL.md">Read the ruleset</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <div class="b">
+      <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 3 L27 8 V16 C27 23 22 27 16 29 C10 27 5 23 5 16 V8 Z" fill="oklch(23% 0.012 60)"/><path d="M11 16 l3.5 3.5 L21 12" stroke="oklch(95.5% 0.011 85)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div><b>a11y-sentinel</b><br><span>AN OPEN-SOURCE AGENT SKILL · MIT</span></div>
+    </div>
+    <nav aria-label="Footer"><a href="#how">How it works</a><a href="#compare">Comparison</a><a href="#ruleset">Ruleset</a><a href="#faq">FAQ</a><a href="https://github.com/skeletont638-code/a11y-sentinel">GitHub</a></nav>
+    <span class="cp">© 2026 · MIT LICENSED</span>
+  </div>
+</footer>
+
+<script>
+  document.documentElement.classList.add('js');
+  document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(b.dataset.copy);const t=b.textContent;b.textContent='Copied ✓';setTimeout(()=>b.textContent=t,1500);}catch(e){}}));
+  const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}})},{rootMargin:'0px 0px -8% 0px',threshold:0.05});
+  document.querySelectorAll('.r').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
